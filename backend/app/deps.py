@@ -20,7 +20,10 @@ def get_current_user(
     payload = decode_token(token)
     if not payload or "sub" not in payload:
         raise credentials_exc
-    user = db.get(User, int(payload["sub"]))
+    try:
+        user = db.get(User, int(payload["sub"]))
+    except (TypeError, ValueError):
+        raise credentials_exc
     if not user:
         raise credentials_exc
     return user

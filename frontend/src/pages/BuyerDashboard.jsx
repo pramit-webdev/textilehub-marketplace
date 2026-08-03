@@ -6,19 +6,30 @@ import { useToast } from "../context/ToastContext";
 import { Spinner, EmptyState } from "../components/Spinner";
 import { OrderStatusBadge, OrderStatusTracker } from "../components/OrderStatus";
 import { formatDate, formatINR } from "../lib/format";
+import ProductCard from "../components/ProductCard";
 
 export default function BuyerDashboard() {
   const { user, token, refresh } = useAuth();
   const { toast } = useToast();
   const [profile, setProfile] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [recommended, setRecommended] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([api.get("/api/buyer/me/profile", token), api.get("/api/buyer/orders", token)])
-      .then(([p, o]) => {
+    Promise.all([
+      api.get("/api/buyer/me/profile", token),
+      api.get("/api/buyer/orders", token),
+      api.post("/api/ai/recommendations", { limit: 6 }, token).then((ids) =>
+        api.get("/api/products?page_size=60").then(({ items }) =>
+          items.filter((p) => ids.includes(p.id))
+        )
+      ).catch(() => []),
+    ])
+      .then(([p, o, rec]) => {
         setProfile(p);
         setOrders(o);
+        setRecommended(rec);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -120,6 +131,21 @@ export default function BuyerDashboard() {
                   <OrderStatusBadge status={o.status} />
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* AI recommendations */}
+      {recommended.length > 0 && (
+        <div className="mt-10">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-semibold text-stone-900">✨ Recommended for you</h2>
+            <span className="text-xs text-stone-400">Based on your profile &amp; order history</span>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {recommended.map((p) => (
+              <ProductCard key={p.id} product={p} />
             ))}
           </div>
         </div>

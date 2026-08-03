@@ -22,6 +22,7 @@ import SupplierDashboard from "./pages/SupplierDashboard";
 import SupplierProducts from "./pages/SupplierProducts";
 import SupplierOrders from "./pages/SupplierOrders";
 import SupplierProfile from "./pages/SupplierProfile";
+import NotFound from "./pages/NotFound";
 
 function AssistantHost() {
   const { user } = useAuth();
@@ -66,7 +67,7 @@ export default function App() {
                   <Route path="/checkout/success" element={<ProtectedRoute role="buyer"><OrderSuccess /></ProtectedRoute>} />
                   <Route path="/dashboard" element={<ProtectedRoute role="buyer"><BuyerDashboard /></ProtectedRoute>} />
                   <Route path="/supplier/*" element={<SupplierLayout />} />
-                  <Route path="*" element={<Landing />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
               <Footer />

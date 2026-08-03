@@ -8,6 +8,8 @@ Role = Literal["buyer", "supplier"]
 
 
 class UserRegister(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
     password: str = Field(min_length=6, max_length=72)
     full_name: str = Field(min_length=1, max_length=120)
@@ -22,6 +24,8 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     email: EmailStr
     password: str
 
@@ -44,6 +48,8 @@ class Token(BaseModel):
 
 
 class BuyerProfileIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     business_type: str | None = None
     industry: str | None = None
     interested_categories: list[str] = Field(default_factory=list)
@@ -62,6 +68,8 @@ class BuyerProfileOut(BuyerProfileIn):
 
 
 class SupplierProfileIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     business_name: str = Field(min_length=1, max_length=160)
     business_type: str | None = None
     contact_phone: str | None = None
@@ -98,6 +106,8 @@ class ProductImageOut(BaseModel):
 
 
 class ProductIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str = Field(min_length=1, max_length=160)
     description: str = Field(min_length=1)
     category_id: int
@@ -112,10 +122,12 @@ class ProductIn(BaseModel):
 
 
 class ProductUpdate(BaseModel):
-    name: str | None = Field(default=None, max_length=160)
-    description: str | None = None
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, min_length=1, max_length=160)
+    description: str | None = Field(default=None, min_length=1)
     category_id: int | None = None
-    fabric_type: str | None = None
+    fabric_type: str | None = Field(default=None, min_length=1, max_length=80)
     price: Decimal | None = Field(default=None, gt=0)
     moq: int | None = Field(default=None, ge=1)
     stock: int | None = Field(default=None, ge=0)
@@ -161,6 +173,8 @@ class ProductListOut(BaseModel):
 
 
 class CartItemIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     product_id: int
     quantity: int = Field(default=1, ge=1, le=999)
 
@@ -182,6 +196,8 @@ class CartOut(BaseModel):
 
 
 class OrderIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     shipping_name: str = Field(min_length=1, max_length=160)
     shipping_phone: str | None = None
     shipping_address: str = Field(min_length=3, max_length=255)
@@ -220,6 +236,8 @@ class OrderOut(BaseModel):
 
 
 class OrderStatusUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     status: Literal[
         "pending", "accepted", "preparing", "ready_for_dispatch", "completed", "cancelled"
     ]
@@ -236,11 +254,15 @@ class SupplierStats(BaseModel):
 
 
 class ChatMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     role: str
     content: str
 
 
 class ChatRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
 
 
@@ -250,20 +272,28 @@ class ChatResponse(BaseModel):
 
 
 class RecommendationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     context: str | None = None
     limit: int = Field(default=6, ge=1, le=20)
 
 
 class CompareRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     product_ids: list[int] = Field(min_length=2, max_length=4)
 
 
 class ProductQARequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     product_id: int
     question: str = Field(min_length=1, max_length=500)
 
 
 class OnboardAIRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     role: Role
     messages: list[ChatMessage] = Field(min_length=1, max_length=20)
 

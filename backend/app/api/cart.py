@@ -79,8 +79,14 @@ def add_to_cart(
         .filter(CartItem.buyer_id == user.id, CartItem.product_id == payload.product_id)
         .first()
     )
+    new_quantity = (item.quantity if item else 0) + payload.quantity
+    if new_quantity > product.stock:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient stock for {product.name} — only {product.stock} units available",
+        )
     if item:
-        item.quantity = min(item.quantity + payload.quantity, 999)
+        item.quantity = min(new_quantity, 999)
     else:
         item = CartItem(buyer_id=user.id, product_id=payload.product_id, quantity=payload.quantity)
         db.add(item)
@@ -102,6 +108,12 @@ def update_quantity(
     )
     if not item:
         raise HTTPException(status_code=404, detail="Item not in cart")
+    product = db.get(Product, item.product_id)
+    if product and payload.quantity > product.stock:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Insufficient stock for {product.name} — only {product.stock} units available",
+        )
     item.quantity = payload.quantity
     db.commit()
     return _to_cart_out(_load_cart_items(db, user))

@@ -11,13 +11,13 @@ from ..utils import serialize_order
 
 router = APIRouter(prefix="/api", tags=["orders"])
 
-ORDER_STATUSES = {
-    "pending",
-    "accepted",
-    "preparing",
-    "ready_for_dispatch",
-    "completed",
-    "cancelled",
+ORDER_STATUS_FLOW = {
+    "pending": {"accepted", "cancelled"},
+    "accepted": {"preparing", "cancelled"},
+    "preparing": {"ready_for_dispatch", "cancelled"},
+    "ready_for_dispatch": {"completed"},
+    "completed": set(),
+    "cancelled": set(),
 }
 
 
@@ -42,6 +42,14 @@ def checkout(
     if not cart_items:
         raise HTTPException(status_code=400, detail="Cart is empty")
 
+    for item in cart_items:
+        product = item.product
+        if item.quantity > product.stock:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient stock for {product.name} — only {product.stock} units available",
+            )
+
     by_supplier: dict[int, list[CartItem]] = {}
     for item in cart_items:
         by_supplier.setdefault(item.product.supplier_id, []).append(item)
@@ -64,7 +72,7 @@ def checkout(
                 )
             )
             total += unit_price
-            product.stock = max(product.stock - item.quantity, 0)
+            product.stock -= item.quantity
 
         order = Order(
             buyer_id=user.id,
@@ -190,6 +198,12 @@ def update_order_status(
     )
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
+    allowed = ORDER_STATUS_FLOW.get(order.status, set())
+    if payload.status not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot change order status from '{order.status}' to '{payload.status}'",
+        )
     order.status = payload.status
     db.commit()
     db.refresh(order)

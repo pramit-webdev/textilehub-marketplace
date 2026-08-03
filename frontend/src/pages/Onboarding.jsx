@@ -120,7 +120,11 @@ export default function Onboarding() {
     setSaving(true);
     try {
       const endpoint = role === "buyer" ? "/api/buyer/me/profile" : "/api/supplier/me/profile";
-      await api.post(endpoint, profile, token);
+      const allowed = fields.map((f) => f.key);
+      const payload = Object.fromEntries(
+        Object.entries(profile).filter(([k]) => allowed.includes(k))
+      );
+      await api.post(endpoint, payload, token);
       const me = await api.get("/api/auth/me", token);
       refresh(me);
       toast(role === "buyer" ? "Profile saved — happy sourcing!" : "Business profile live!");

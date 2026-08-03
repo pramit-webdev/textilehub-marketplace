@@ -29,6 +29,10 @@ def list_products(
     page_size: int = Query(default=24, ge=1, le=60),
     db: Session = Depends(get_db),
 ):
+    if min_price is not None and max_price is not None and min_price > max_price:
+        raise HTTPException(
+            status_code=422, detail="min_price cannot be greater than max_price"
+        )
     query = db.query(Product).options(
         selectinload(Product.category),
         selectinload(Product.images),

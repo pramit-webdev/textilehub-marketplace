@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
     FRONTEND_URL: str = "http://localhost:5173"
     HF_TOKEN: str = ""
-    HF_CHAT_MODEL: str = "HuggingFaceH4/zephyr-7b-beta"
+    HF_CHAT_MODEL: str = "Qwen/Qwen3-4B-Instruct-2507"
     HF_EMBEDDING_MODEL: str = "sentence-transformers/all-MiniLM-L6-v2"
-    HF_API_URL: str = "https://api-inference.huggingface.co"
+    HF_API_URL: str = "https://router.huggingface.co"
     PUBLIC_BASE_URL: str = "http://localhost:8000"
     MAX_UPLOAD_MB: int = 5
 

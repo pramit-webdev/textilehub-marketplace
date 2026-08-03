@@ -34,7 +34,7 @@ export default function Products() {
   const fabric = params.get("fabric") || "";
   const inStock = params.get("in_stock") === "1";
   const sort = params.get("sort") || "featured";
-  const [maxPrice, setMaxPrice] = useState(2500);
+  const [maxPrice, setMaxPrice] = useState("");
 
   useEffect(() => {
     api.get("/api/categories").then(setCategories).catch(() => {});

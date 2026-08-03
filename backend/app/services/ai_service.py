@@ -1,9 +1,10 @@
+import asyncio
 import json
 import math
 import re
+import urllib.error
+import urllib.request
 from typing import Any
-
-import httpx
 
 from ..config import settings
 
@@ -36,21 +37,37 @@ class AIService:
 
     # ---------- low level HF calls ----------
 
+    @staticmethod
+    def _post_json(url: str, payload: dict, headers: dict, timeout: int = 60) -> str:
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=data,
+            headers={**headers, "Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.read().decode("utf-8")
+
     async def _hf_chat(self, prompt: str, model: str | None = None) -> str | None:
         model = model or settings.HF_CHAT_MODEL
-        url = f"{settings.HF_API_URL}/models/{model}"
-        payload = {"inputs": prompt, "parameters": {"max_new_tokens": 350, "temperature": 0.4}}
+        url = f"{settings.HF_API_URL}/v1/chat/completions"
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 350,
+            "temperature": 0.4,
+        }
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
-                resp = await client.post(url, headers=self.headers, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if isinstance(data, list):
-                        return data[0].get("generated_text", "")
-                    return str(data)
-        except Exception:
+            body = await asyncio.to_thread(
+                self._post_json, url, payload, self.headers
+            )
+            data = json.loads(body)
+            message = (data.get("choices") or [{}])[0].get("message") or {}
+            reply = message.get("content") or message.get("reasoning_content") or ""
+            return reply.strip() or None
+        except Exception as exc:
             return None
-        return None
 
     async def _hf_embed(self, text: str) -> list[float] | None:
         url = (
@@ -59,15 +76,15 @@ class AIService:
         )
         payload = {"inputs": text, "options": {"wait_for_model": True}}
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
-                resp = await client.post(url, headers=self.headers, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if isinstance(data, list) and data and isinstance(data[0], list):
-                        return data[0]
-                    if isinstance(data, list):
-                        return data
-        except Exception:
+            body = await asyncio.to_thread(
+                self._post_json, url, payload, self.headers
+            )
+            data = json.loads(body)
+            if isinstance(data, list) and data and isinstance(data[0], list):
+                return data[0]
+            if isinstance(data, list):
+                return data
+        except Exception as exc:
             return None
         return None
 
@@ -353,7 +370,7 @@ class AIService:
                 prefix = "User: " if msg["role"] == "user" else "Assistant: "
                 prompt += f"{prefix}{msg['content']}\n"
             prompt += "JSON:"
-            reply = await self._hf_chat(prompt, model="meta-llama/Llama-3.2-1B-Instruct")
+            reply = await self._hf_chat(prompt)
             parsed = self._try_parse_json(reply)
             if parsed is not None:
                 return parsed

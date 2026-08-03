@@ -16,5 +16,14 @@ export default function ProtectedRoute({ children, role }) {
     return <Navigate to={user.role === "supplier" ? "/supplier" : "/"} replace />;
   }
 
+  if (user && !user.is_onboarded && !location.pathname.startsWith("/onboarding")) {
+    return (
+      <Navigate
+        to={user.role === "supplier" ? "/onboarding/supplier" : "/onboarding"}
+        replace
+      />
+    );
+  }
+
   return children;
 }

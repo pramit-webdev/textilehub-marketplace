@@ -39,7 +39,7 @@ export default function ProductDetail() {
         setProduct(p);
         setColor(p.colors?.[0] || "");
         if (token) {
-          api.post(`/api/ai/similar/${p.id}`).then((ids) => {
+          api.post(`/api/ai/similar/${p.id}`, undefined, token).then((ids) => {
             api.get("/api/products?page_size=60").then((all) => {
               setSimilar(all.items.filter((x) => ids.includes(x.id) && x.id !== p.id).slice(0, 4));
             });
@@ -92,7 +92,7 @@ export default function ProductDetail() {
     setQaBusy(true);
     setQaAnswer("");
     try {
-      const res = await api.post("/api/ai/product-qa", { product_id: product.id, question: qaQuestion });
+      const res = await api.post("/api/ai/product-qa", { product_id: product.id, question: qaQuestion }, token);
       setQaAnswer(res.reply);
     } catch {
       setQaAnswer("Could not reach the assistant right now.");

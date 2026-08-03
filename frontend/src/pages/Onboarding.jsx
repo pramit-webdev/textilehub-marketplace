@@ -79,7 +79,7 @@ export default function Onboarding() {
       const res = await api.post("/api/ai/onboarding", {
         role,
         messages: [...messages.map((m) => ({ role: m.role, content: m.content })), { role: "user", content: trimmed }],
-      });
+      }, token);
       mergeStructured(res.structured);
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
     } catch {

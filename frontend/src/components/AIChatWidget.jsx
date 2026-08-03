@@ -74,7 +74,7 @@ export default function AIChatWidget({ context = "" }) {
       const res = await api.post("/api/ai/chat", {
         messages: [...messages.map(({ role, content }) => ({ role, content })), { role: "user", content: trimmed }],
         ...(context ? { context } : {}),
-      });
+      }, token);
       setMessages((prev) => [...prev, { role: "assistant", content: res.reply }]);
     } catch (e) {
       setMessages((prev) => [
@@ -93,7 +93,7 @@ export default function AIChatWidget({ context = "" }) {
     try {
       const ids = await api.post("/api/ai/nl-search", {
         messages: [{ role: "user", content: query }],
-      });
+      }, token);
       const products = await api.get("/api/products?page_size=60");
       const matched = products.items.filter((p) => ids.includes(p.id));
       setSearchResults(matched);

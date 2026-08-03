@@ -24,8 +24,12 @@ ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 
 
-def _ensure_upload_dir() -> None:
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
+def _ensure_upload_dir() -> bool:
+    try:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        return os.access(UPLOAD_DIR, os.W_OK)
+    except OSError:
+        return False
 
 
 @router.get("/dashboard", response_model=SupplierStats)
@@ -172,7 +176,11 @@ def upload_product_image(
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="Only JPG, PNG, WEBP or GIF images are allowed")
 
-    _ensure_upload_dir()
+    if not _ensure_upload_dir():
+        raise HTTPException(
+            status_code=503,
+            detail="File storage is unavailable in this deployment",
+        )
     ext = os.path.splitext(file.filename or "")[1][:5] or ".jpg"
     filename = f"{uuid.uuid4().hex}{ext}"
     dest = os.path.join(UPLOAD_DIR, filename)

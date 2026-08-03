@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-brand-50: #effaf7;
+  --color-brand-100: #d7f2ea;
+  --color-brand-200: #b0e4d7;
+  --color-brand-300: #7fd0be;
+  --color-brand-400: #4bb4a1;
+  --color-brand-500: #2d9887;
+  --color-brand-600: #1f7a6d;
+  --color-brand-700: #1b6259;
+  --color-brand-800: #184e48;
+  --color-brand-900: #16413d;
+  --color-brand-950: #0a2624;
+
+  --color-accent-50: #fdf8ef;
+  --color-accent-100: #faeed7;
+  --color-accent-200: #f4daae;
+  --color-accent-300: #ecc17b;
+  --color-accent-400: #e3a246;
+  --color-accent-500: #db8a26;
+  --color-accent-600: #c26f1d;
+  --color-accent-700: #a1551a;
+  --color-accent-800: #83441b;
+  --color-accent-900: #6b3819;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-stone-50 text-stone-800 antialiased;
+  font-family: var(--font-sans);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.prose-chat p {
+  margin-bottom: 0.5rem;
+}
+
+::selection {
+  background: var(--color-accent-200);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.5s ease-out both;
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.animate-pulse-soft {
+  animation: pulseSoft 1.2s ease-in-out infinite;
+}
+
+/* thin scrollbars for chat panels */
+.scroll-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: rgb(0 0 0 / 0.15);
+  border-radius: 999px;
+}

@@ -16,3 +16,6 @@ frontend/.env
 .DS_Store
 *.log
 *.pdf
+
+# Local documentation (not published to GitHub)
+PROJECT_DOCUMENTATION.md

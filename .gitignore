@@ -19,3 +19,8 @@ frontend/.env
 
 # Local documentation (not published to GitHub)
 PROJECT_DOCUMENTATION.md
+
+# E2E harness local state
+e2e/.env
+frontend/test-results/
+frontend/playwright-report/

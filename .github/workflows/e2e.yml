@@ -63,4 +63,6 @@ jobs:
         if: always()
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: python3 e2e/cleanup_db.py
+        run: |
+          pip install --quiet sqlalchemy psycopg2-binary
+          python3 e2e/cleanup_db.py

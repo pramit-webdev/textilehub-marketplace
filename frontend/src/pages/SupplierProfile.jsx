@@ -15,6 +15,7 @@ export default function SupplierProfile() {
     api
       .get("/api/supplier/me/profile", token)
       .then(setProfile)
+      .catch(() => toast("Could not load your profile", "error"))
       .finally(() => setLoading(false));
   }, [token]);
 

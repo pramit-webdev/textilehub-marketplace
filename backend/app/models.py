@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     JSON,
+    LargeBinary,
     Numeric,
     String,
     Text,
@@ -121,6 +122,7 @@ class ProductImage(Base):
         ForeignKey("products.id", ondelete="CASCADE"), index=True
     )
     url: Mapped[str] = mapped_column(String(500))
+    data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
 
     product: Mapped["Product"] = relationship(back_populates="images")

@@ -5,10 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import { EmptyState, Spinner } from "../components/Spinner";
-import { formatINR, productImage } from "../lib/format";
-
-const FALLBACK_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23e5e7eb'/%3E%3Ctext x='200' y='220' font-size='80' text-anchor='middle'%3E🧵%3C/text%3E%3C/svg%3E";
+import { formatINR, productImage, FALLBACK_IMG } from "../lib/format";
 
 export default function Compare() {
   const navigate = useNavigate();
@@ -63,7 +60,7 @@ export default function Compare() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <h1 className="font-display text-2xl font-bold text-stone-900 sm:text-3xl">Compare fabrics</h1>
       <p className="mt-1 text-sm text-stone-500">
-        Add 2–4 fabrics from product pages, or search below. Loom's AI will give you a side-by-side verdict.
+        Add 2–4 fabrics from product pages. Loom's AI will give you a side-by-side verdict.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2">

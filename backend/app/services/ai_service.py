@@ -1,8 +1,6 @@
 import asyncio
 import json
-import math
 import re
-import urllib.error
 import urllib.request
 from typing import Any
 
@@ -69,37 +67,7 @@ class AIService:
         except Exception as exc:
             return None
 
-    async def _hf_embed(self, text: str) -> list[float] | None:
-        url = (
-            f"{settings.HF_API_URL}/pipeline/feature-extraction/"
-            f"{settings.HF_EMBEDDING_MODEL}"
-        )
-        payload = {"inputs": text, "options": {"wait_for_model": True}}
-        try:
-            body = await asyncio.to_thread(
-                self._post_json, url, payload, self.headers
-            )
-            data = json.loads(body)
-            if isinstance(data, list) and data and isinstance(data[0], list):
-                return data[0]
-            if isinstance(data, list):
-                return data
-        except Exception as exc:
-            return None
-        return None
-
     # ---------- helpers ----------
-
-    def _embedding_available(self) -> bool:
-        return self.enabled
-
-    def _cosine(self, a: list[float], b: list[float]) -> float:
-        if not a or not b or len(a) != len(b):
-            return 0.0
-        dot = sum(x * y for x, y in zip(a, b))
-        na = math.sqrt(sum(x * x for x in a))
-        nb = math.sqrt(sum(x * x for x in b))
-        return dot / (na * nb + 1e-9)
 
     def _strip_chat_prefix(self, text: str) -> str:
         markers = [
@@ -217,30 +185,12 @@ class AIService:
         )
 
     async def semantic_search(self, query: str, products: list[dict], limit: int = 10) -> list[dict]:
-        q_vec = await self._hf_embed(query) if self._embedding_available() else None
-        scored: list[tuple[float, dict]] = []
-        for p in products:
-            if q_vec:
-                p_vec = p.get("_embedding")
-                sim = self._cosine(q_vec, p_vec) if p_vec else 0.0
-            else:
-                sim = 0.0
-            kw = self._keyword_score(query, p)
-            combined = (0.7 * sim) + (0.3 * kw) if q_vec else kw
-            scored.append((combined, p))
+        scored: list[tuple[float, dict]] = [
+            (self._keyword_score(query, p), p) for p in products
+        ]
         scored.sort(key=lambda x: -x[0])
         results = [p for s, p in scored if s > 0.01][:limit]
         return results or products[: min(limit, len(products))]
-
-    async def embed_batch(self, texts: list[str]) -> dict[str, list[float]]:
-        result: dict[str, list[float]] = {}
-        if not self.enabled:
-            return result
-        for text in texts:
-            vec = await self._hf_embed(text)
-            if vec:
-                result[text] = vec
-        return result
 
     async def recommend(
         self,

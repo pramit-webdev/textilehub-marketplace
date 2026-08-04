@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session, selectinload
 from ..config import settings
 from ..database import get_db
 from ..deps import require_role
-from ..models import Order, OrderItem, Product, ProductImage, User
+from ..models import Category, Order, OrderItem, Product, ProductImage, User
 from ..schemas import (
     ProductIn,
     ProductListOut,
@@ -21,15 +21,18 @@ from ..utils import serialize_order, serialize_product
 router = APIRouter(prefix="/api/supplier", tags=["supplier"])
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads")
 
 
-def _ensure_upload_dir() -> bool:
-    try:
-        os.makedirs(UPLOAD_DIR, exist_ok=True)
-        return os.access(UPLOAD_DIR, os.W_OK)
-    except OSError:
-        return False
+def _sniff_image_type(data: bytes) -> str | None:
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "image/gif"
+    return None
 
 
 @router.get("/dashboard", response_model=SupplierStats)
@@ -87,6 +90,8 @@ def supplier_products(
     user: User = Depends(require_role("supplier")),
     db: Session = Depends(get_db),
 ):
+    page = max(1, min(page, 10000))
+    page_size = max(1, min(page_size, 100))
     query = _supplier_products_query(db, user)
     total = query.count()
     products = (
@@ -113,6 +118,8 @@ def create_product(
         raise HTTPException(
             status_code=400, detail="Complete supplier onboarding before listing products"
         )
+    if not db.get(Category, payload.category_id):
+        raise HTTPException(status_code=422, detail="Unknown category")
     product = Product(supplier_id=user.id, **payload.model_dump())
     db.add(product)
     db.commit()
@@ -134,7 +141,10 @@ def update_product(
     )
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    if "category_id" in updates and not db.get(Category, updates["category_id"]):
+        raise HTTPException(status_code=422, detail="Unknown category")
+    for field, value in updates.items():
         setattr(product, field, value)
     db.commit()
     db.refresh(product)
@@ -185,29 +195,26 @@ def upload_product_image(
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=400, detail="Only JPG, PNG, WEBP or GIF images are allowed")
 
-    if not _ensure_upload_dir():
-        raise HTTPException(
-            status_code=503,
-            detail="File storage is unavailable in this deployment",
-        )
-    ext = os.path.splitext(file.filename or "")[1][:5] or ".jpg"
-    filename = f"{uuid.uuid4().hex}{ext}"
-    dest = os.path.join(UPLOAD_DIR, filename)
-    size = 0
-    with open(dest, "wb") as out:
-        while chunk := file.file.read(1024 * 1024):
-            size += len(chunk)
-            if size > settings.MAX_UPLOAD_MB * 1024 * 1024:
-                out.close()
-                os.remove(dest)
-                raise HTTPException(status_code=413, detail="Image too large")
-            out.write(chunk)
+    max_bytes = settings.MAX_UPLOAD_MB * 1024 * 1024
+    data = b""
+    while chunk := file.file.read(1024 * 1024):
+        data += chunk
+        if len(data) > max_bytes:
+            raise HTTPException(status_code=413, detail="Image too large")
+    if not data:
+        raise HTTPException(status_code=400, detail="Empty file")
+    if _sniff_image_type(data) is None:
+        raise HTTPException(status_code=400, detail="File content is not a valid image")
 
-    from ..models import ProductImage
+    ext = os.path.splitext(file.filename or "")[1][:5] or ".jpg"
+    if ext not in (".jpg", ".jpeg", ".png", ".webp", ".gif"):
+        ext = ".jpg"
+    filename = f"{uuid.uuid4().hex}{ext}"
 
     image = ProductImage(
         product_id=product.id,
         url=f"{settings.PUBLIC_BASE_URL}/uploads/{filename}",
+        data=data,
         is_primary=is_primary,
     )
     db.add(image)
@@ -236,10 +243,6 @@ def delete_product_image(
     image = next((img for img in product.images if img.id == image_id), None)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
-    filename = os.path.basename(image.url)
-    file_path = os.path.join(UPLOAD_DIR, filename)
-    if os.path.exists(file_path):
-        os.remove(file_path)
     db.delete(image)
     db.commit()
     db.refresh(product)

@@ -2,10 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import { EmptyState, Spinner } from "../components/Spinner";
-import { formatINR } from "../lib/format";
-
-const FALLBACK_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23e5e7eb'/%3E%3Ctext x='100' y='115' font-size='50' text-anchor='middle'%3E🧵%3C/text%3E%3C/svg%3E";
+import { formatINR, FALLBACK_IMG } from "../lib/format";
 
 export default function Cart() {
   const { cart, loading, updateQuantity, removeItem } = useCart();
@@ -58,7 +55,14 @@ export default function Cart() {
                       )}
                     </div>
                     <button
-                      onClick={async () => { await removeItem(item.product_id); toast("Removed from cart"); }}
+                      onClick={async () => {
+                        try {
+                          await removeItem(item.product_id);
+                          toast("Removed from cart");
+                        } catch {
+                          toast("Could not remove item", "error");
+                        }
+                      }}
                       className="text-stone-400 hover:text-red-600"
                       aria-label="Remove"
                     >

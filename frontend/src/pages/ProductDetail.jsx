@@ -6,10 +6,7 @@ import { useCart } from "../context/CartContext";
 import { useToast } from "../context/ToastContext";
 import ProductCard from "../components/ProductCard";
 import { EmptyState, Spinner } from "../components/Spinner";
-import { formatINR, pluralize } from "../lib/format";
-
-const FALLBACK_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='600'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23d7f2ea'/%3E%3Cstop offset='100%25' stop-color='%23faeed7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='800' height='600' fill='url(%23g)'/%3E%3Ctext x='400' y='320' font-size='120' text-anchor='middle'%3E🧵%3C/text%3E%3C/svg%3E";
+import { formatINR, pluralize, FALLBACK_IMG } from "../lib/format";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -29,10 +26,12 @@ export default function ProductDetail() {
   const [qaAnswer, setQaAnswer] = useState("");
   const [qaBusy, setQaBusy] = useState(false);
   const [adding, setAdding] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     setLoading(true);
     setProduct(null);
+    setLoadError("");
     api
       .get(`/api/products/${id}`)
       .then((p) => {
@@ -46,7 +45,10 @@ export default function ProductDetail() {
           }).catch(() => {});
         }
       })
-      .catch(() => setProduct(null))
+      .catch((e) => {
+        setProduct(null);
+        setLoadError(e.status === 404 ? "" : "Could not load this product. Please try again.");
+      })
       .finally(() => setLoading(false));
   }, [id, token]);
 
@@ -56,7 +58,8 @@ export default function ProductDetail() {
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <EmptyState
           icon="😕"
-          title="Product not found"
+          title={loadError ? "Something went wrong" : "Product not found"}
+          subtitle={loadError}
           action={
             <Link to="/products" className="rounded-full bg-brand-700 px-5 py-2 text-sm font-semibold text-white">
               Back to marketplace

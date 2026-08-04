@@ -1,8 +1,5 @@
 import { Link } from "react-router-dom";
-import { formatINR, pluralize, productImage } from "../lib/format";
-
-const FALLBACK_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23d7f2ea'/%3E%3Cstop offset='100%25' stop-color='%23faeed7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='400' height='400' fill='url(%23g)'/%3E%3Ctext x='200' y='210' font-size='80' text-anchor='middle'%3E🧵%3C/text%3E%3C/svg%3E";
+import { formatINR, pluralize, productImage, FALLBACK_IMG } from "../lib/format";
 
 export default function ProductCard({ product, onAddToCart, adding = false }) {
   const img = productImage(product, FALLBACK_IMG);

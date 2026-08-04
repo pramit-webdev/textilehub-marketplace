@@ -30,12 +30,20 @@ export default function SupplierDashboard() {
   const { token, user } = useAuth();
   const [stats, setStats] = useState(null);
   const [chart, setChart] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    api.get("/api/supplier/dashboard", token).then(setStats).catch(() => {});
+    api.get("/api/supplier/dashboard", token).then(setStats).catch(() => setError("Could not load your dashboard. Try refreshing."));
     api.get("/api/supplier/orders/stats/last7days", token).then(setChart).catch(() => {});
   }, [token]);
 
+  if (error && !stats) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+        <EmptyState icon="⚠️" title="Something went wrong" subtitle={error} />
+      </div>
+    );
+  }
   if (!stats) return <Spinner />;
 
   const maxRevenue = Math.max(1, ...Object.values(chart || {}).map((d) => d.revenue));

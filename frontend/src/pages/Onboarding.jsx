@@ -3,7 +3,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { Spinner } from "../components/Spinner";
 
 const BUYER_FIELDS = [
   { key: "business_type", label: "Business type" },

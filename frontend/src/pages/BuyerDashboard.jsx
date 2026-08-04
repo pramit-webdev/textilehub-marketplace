@@ -31,7 +31,7 @@ export default function BuyerDashboard() {
         setOrders(o);
         setRecommended(rec);
       })
-      .catch(() => {})
+      .catch(() => toast("Could not load your dashboard", "error"))
       .finally(() => setLoading(false));
   }, [token]);
 

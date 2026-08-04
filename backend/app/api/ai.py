@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from ..database import get_db
 from ..deps import get_current_user
-from ..models import Product, ProductImage, User
+from ..models import Product, User
 from ..schemas import (
     ChatRequest,
     ChatResponse,
@@ -87,6 +87,7 @@ async def similar(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    limit = max(1, min(limit, 20))
     catalog = _catalog_dicts(db)
     product = next((p for p in catalog if p["id"] == product_id), None)
     if not product:

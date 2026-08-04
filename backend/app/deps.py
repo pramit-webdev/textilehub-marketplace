@@ -6,7 +6,7 @@ from .database import get_db
 from .models import User
 from .security import decode_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login/form")
 
 
 def get_current_user(

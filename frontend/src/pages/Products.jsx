@@ -8,7 +8,6 @@ import ProductCard from "../components/ProductCard";
 import { EmptyState, Spinner } from "../components/Spinner";
 import { pluralize } from "../lib/format";
 
-const FABRICS = ["Cotton", "Silk", "Linen", "Wool", "Denim", "Polyester", "Viscose", "Blends"];
 const SORTS = [
   { value: "featured", label: "Featured" },
   { value: "newest", label: "Newest" },
@@ -53,7 +52,7 @@ export default function Products() {
     api
       .get(`/api/products?${q.toString()}`)
       .then(setData)
-      .catch(() => {})
+      .catch(() => toast("Could not load products", "error"))
       .finally(() => setLoading(false));
   }, [search, category, fabric, inStock, sort, maxPrice]);
 

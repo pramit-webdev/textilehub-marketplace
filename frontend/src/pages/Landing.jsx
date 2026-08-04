@@ -30,8 +30,11 @@ export default function Landing() {
         setCategories(cats);
         setFeatured(prods.items);
       })
+      .catch(() => {
+        toast("Could not load the marketplace right now", "error");
+      })
       .finally(() => setLoading(false));
-  }, []);
+  }, [toast]);
 
   async function handleAdd(id) {
     if (!user || user.role !== "buyer") {
@@ -177,7 +180,14 @@ export default function Landing() {
               ))}
             </ul>
             <button
-              onClick={() => window.scrollTo({ top: 0 })}
+              onClick={() => {
+                if (!user || user.role !== "buyer") {
+                  toast("Log in as a buyer to use the AI assistant");
+                  navigate("/auth?mode=login");
+                  return;
+                }
+                window.dispatchEvent(new CustomEvent("textilehub:open-assistant"));
+              }}
               className="mt-8 rounded-full bg-white px-6 py-3 text-sm font-bold text-brand-800 shadow-lg hover:bg-brand-50"
             >
               ✨ Try the assistant (bottom-right)

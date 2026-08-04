@@ -4,10 +4,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { Spinner, EmptyState } from "../components/Spinner";
-import { formatINR, productImage } from "../lib/format";
-
-const FALLBACK_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect width='200' height='200' fill='%23e5e7eb'/%3E%3Ctext x='100' y='115' font-size='50' text-anchor='middle'%3E🧵%3C/text%3E%3C/svg%3E";
+import { formatINR, productImage, FALLBACK_IMG } from "../lib/format";
 
 const EMPTY_FORM = {
   name: "",
@@ -45,6 +42,7 @@ export default function SupplierProducts() {
         setProducts(p.items);
         setCategories(c);
       })
+      .catch(() => toast("Could not load your products", "error"))
       .finally(() => setLoading(false));
   }, [token]);
 

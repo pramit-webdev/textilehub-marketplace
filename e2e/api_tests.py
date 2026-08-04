@@ -236,8 +236,14 @@ def main():
     check("dashboard totals", code == 200 and d["total_products"] == 2 and d["active_products"] == 1, f"{code} {d.get('total_products')}/{d.get('active_products')}")
     code, _ = req("GET", "/api/supplier/orders/stats/last7days", token=st)
     check("stats last7days -> 200", code == 200, f"{code}")
-    code, _ = multipart_req(f"/api/supplier/products/{pid_a}/images", st)
-    check("upload unavailable -> 503", code == 503, f"{code}")
+    PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 64
+    code, d = multipart_req(f"/api/supplier/products/{pid_a}/images?is_primary=true", st, content=PNG)
+    img_url = d.get("images", [{}])[0].get("url", "") if isinstance(d, dict) else ""
+    check("upload image -> 200", code == 200 and img_url, f"{code}")
+    code2, _ = req("GET", img_url.replace(BASE, "")) if img_url.startswith(BASE) else (0, "")
+    check("uploaded image served", code2 == 200, f"{code2}")
+    code, _ = multipart_req(f"/api/supplier/products/{pid_a}/images", st, filename="evil.png", content=b"junk not an image")
+    check("fake image rejected -> 400", code == 400, f"{code}")
     code, _ = req("POST", "/api/cart/items", token=bt, body={"product_id": pid_a, "quantity": 2})
     code, orders = req("POST", "/api/checkout", token=bt, body=SHIP)
     cross_oid = orders[0]["id"] if isinstance(orders, list) and orders else None

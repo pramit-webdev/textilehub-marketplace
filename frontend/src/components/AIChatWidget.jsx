@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
-import { formatINR, productImage } from "../lib/format";
+import { formatINR, productImage, FALLBACK_IMG } from "../lib/format";
 
 const SUGGESTIONS = [
   "Find lightweight summer fabrics",
@@ -11,9 +11,6 @@ const SUGGESTIONS = [
   "Silk under ₹500 for sarees",
   "What's the MOQ for denim?",
 ];
-
-const FALLBACK_IMG =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23e5e7eb'/%3E%3Ctext x='200' y='210' font-size='80' text-anchor='middle'%3E🧵%3C/text%3E%3C/svg%3E";
 
 function renderRich(text) {
   const lines = text.split("\n");
@@ -56,7 +53,12 @@ export default function AIChatWidget({ context = "" }) {
   }, [messages, searchResults, busy]);
 
   useEffect(() => {
+    function onOpenRequest() {
+      setOpen(true);
+    }
+    window.addEventListener("textilehub:open-assistant", onOpenRequest);
     return () => {
+      window.removeEventListener("textilehub:open-assistant", onOpenRequest);
       if (recRef.current) recRef.current.stop();
     };
   }, []);

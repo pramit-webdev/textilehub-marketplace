@@ -26,6 +26,7 @@ export default function SupplierOrders() {
     api
       .get("/api/supplier/orders", token)
       .then(setOrders)
+      .catch(() => toast("Could not load orders", "error"))
       .finally(() => setLoading(false));
   }, [token]);
 

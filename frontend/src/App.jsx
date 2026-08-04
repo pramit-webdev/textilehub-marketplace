@@ -32,16 +32,12 @@ function AssistantHost() {
 
 function SupplierLayout() {
   return (
-    <div>
-      <Navbar />
-      <Routes>
-        <Route path="" element={<ProtectedRoute role="supplier"><SupplierDashboard /></ProtectedRoute>} />
-        <Route path="products" element={<ProtectedRoute role="supplier"><SupplierProducts /></ProtectedRoute>} />
-        <Route path="orders" element={<ProtectedRoute role="supplier"><SupplierOrders /></ProtectedRoute>} />
-        <Route path="profile" element={<ProtectedRoute role="supplier"><SupplierProfile /></ProtectedRoute>} />
-      </Routes>
-      <Footer />
-    </div>
+    <Routes>
+      <Route path="" element={<ProtectedRoute role="supplier"><SupplierDashboard /></ProtectedRoute>} />
+      <Route path="products" element={<ProtectedRoute role="supplier"><SupplierProducts /></ProtectedRoute>} />
+      <Route path="orders" element={<ProtectedRoute role="supplier"><SupplierOrders /></ProtectedRoute>} />
+      <Route path="profile" element={<ProtectedRoute role="supplier"><SupplierProfile /></ProtectedRoute>} />
+    </Routes>
   );
 }
 

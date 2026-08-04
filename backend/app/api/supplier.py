@@ -2,13 +2,13 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
 from sqlalchemy.orm import Session, selectinload
 
 from ..config import settings
 from ..database import get_db
 from ..deps import require_role
-from ..models import Order, Product, ProductImage, User
+from ..models import Order, OrderItem, Product, ProductImage, User
 from ..schemas import (
     ProductIn,
     ProductListOut,
@@ -141,7 +141,7 @@ def update_product(
     return serialize_product(product)
 
 
-@router.delete("/products/{product_id}", status_code=204)
+@router.delete("/products/{product_id}")
 def delete_product(
     product_id: int,
     user: User = Depends(require_role("supplier")),
@@ -154,8 +154,17 @@ def delete_product(
     )
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    has_orders = (
+        db.query(OrderItem.id).filter(OrderItem.product_id == product.id).first()
+        is not None
+    )
+    if has_orders:
+        product.is_active = False
+        db.commit()
+        return serialize_product(product)
     db.delete(product)
     db.commit()
+    return Response(status_code=204)
 
 
 @router.post("/products/{product_id}/images", response_model=ProductOut)

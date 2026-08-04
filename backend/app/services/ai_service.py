@@ -152,7 +152,7 @@ class AIService:
 
     def _catalog_blurb(self, catalog: list[dict]) -> str:
         lines = []
-        for p in catalog[:8]:
+        for p in catalog[:60]:
             lines.append(
                 f"- {p.get('name')} | {p.get('fabric_type')} | "
                 f"{p.get('category')} | Rs. {p.get('price')} | "

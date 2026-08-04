@@ -41,7 +41,10 @@ def req(method, path, token=None, body=None, raw=False, timeout=150):
     try:
         with urllib.request.urlopen(r, timeout=timeout) as resp:
             payload = resp.read()
-            return resp.status, (payload.decode() if raw else json.loads(payload or "null"))
+            try:
+                return resp.status, (payload.decode() if raw else json.loads(payload or "null"))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                return resp.status, payload
     except urllib.error.HTTPError as exc:
         payload = exc.read().decode()
         try:
@@ -189,6 +192,10 @@ def main():
     print("\n[E] AI assistant")
     code, d = req("POST", "/api/ai/chat", token=bt,
                   body={"messages": [{"role": "user", "content": "find lightweight summer cotton under 300"}]})
+    if code == 200 and d.get("source") != "ai":
+        time.sleep(5)  # HF free-tier rate limit -> retry once
+        code, d = req("POST", "/api/ai/chat", token=bt,
+                      body={"messages": [{"role": "user", "content": "find lightweight summer cotton under 300"}]})
     check("chat -> source ai", code == 200 and d.get("source") == "ai" and d.get("reply"), f"{code} source={d.get('source')}")
     code, d = req("POST", "/api/ai/nl-search", token=bt,
                   body={"messages": [{"role": "user", "content": "silk sarees"}]})
